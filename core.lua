@@ -2,7 +2,7 @@ SGTCraftCost = LibStub("AceAddon-3.0"):NewAddon("SGTCraftCost", "AceConsole-3.0"
 SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 
 --Variables start
-local SGTCraftCostVersion = "v1.0";
+local SGTCraftCostVersion = "v1.0.1";
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -95,7 +95,7 @@ end
 
 function SGTCraftCost:UpdatePrice(frame, priceText)
     if(frame ~= nil and frame.Text ~= nil) then 
-        frame.Text:SetText(priceText);
+        frame.Text:SetText(SGTCraftCost.L["PriceText"] .. tostring(priceText));
     end
 end
 
