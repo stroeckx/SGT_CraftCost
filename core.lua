@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 3;
+SGTCraftCost.minorVersion = 4;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -18,9 +18,10 @@ function SGTCraftCost:OnInitialize()
     end
 	SGTCraftCost:RegisterEvent("TRADE_SKILL_SHOW", "OnProfessionOpened");
 	SGTCraftCost:RegisterChatCommand("tstcc", "tst");
-    professionsSchematic.QualityDialog:RegisterCallback("Accepted", SGTCraftCost.OnReagentsModified);
     SGTCore:AddTabWithFrame("SGTCraftCost", SGTCraftCost.L["Craft Cost"], SGTCraftCost.L["Craft Cost"], SGTCraftCost:GetVersionString(), SGTCraftCost.OnCraftCostFrameCreated);
-    EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", SGTCraftCost.UpdateCurrentReagentSelectionPrice);
+    EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", SGTCraftCost.OnRecipeSelected);
+	professionsSchematic:RegisterCallback(ProfessionsRecipeSchematicFormMixin.Event.AllocationsModified, SGTCraftCost.OnAllocationsModified);
+    professionsSchematic:RegisterCallback(ProfessionsRecipeSchematicFormMixin.Event.UseBestQualityModified, SGTCraftCost.UseBestQualityModified);
 end
 
 function SGTCraftCost:GetVersionString()
@@ -30,6 +31,18 @@ end
 function SGTCraftCost:OnCraftCostFrameCreated()
     local craftCostFrame = SGTCore:GetTabFrame("SGTCraftCost");
     local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCoreDescriptionsText", craftCostFrame.scrollframe.scrollchild, craftCostFrame, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"], craftCostFrame);
+end
+
+function SGTCraftCost:OnAllocationsModified()
+    SGTCraftCost:UpdateCurrentReagentSelectionPrice();
+end
+
+function SGTCraftCost:UseBestQualityModified()
+    SGTCraftCost:UpdateCurrentReagentSelectionPrice();
+end
+
+function SGTCraftCost:OnRecipeSelected()
+    SGTCraftCost:UpdateCurrentReagentSelectionPrice();
 end
 
 function SGTCraftCost:tst()
@@ -98,7 +111,7 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
         for tier, data in pairs(schematic.reagents) do
             for _, reagentID in pairs(data) do
                 local matPrice = SGTCraftCost:GetReagentPrice(reagentID);
-                if(cheapestMatPrice < 0 or matPrice < cheapestMatPrice) then
+                if(cheapestMatPrice < 0 or matPrice < cheapestMatPrice and matPrice > 0) then
                     cheapestMatPrice = matPrice;
                 end
                 allocatedPrice = allocatedPrice + (quantities[tier] * matPrice);
@@ -106,7 +119,6 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
         end
         minPrice = minPrice + (quantityRequired * cheapestMatPrice);
     end
-    schematic.QualityDialog:RegisterCallback("Accepted", SGTCraftCost.OnReagentsModified);
     return allocatedPrice, minPrice;
 end
 
