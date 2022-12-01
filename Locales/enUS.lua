@@ -7,3 +7,5 @@ L["SGTCraftCostDescription"] = "SGT Craft Cost is a module that calculates the c
 L["PriceText"] = "Craft Cost: "
 L["AllocPriceText"] = "Allocated Cost: "
 L["MinPriceText"] = "Min craft Cost: "
+L["Error_version_core"] = "SGT Core version is below the required version, please update SGT Core.\nSGT CraftCost will not load until you have updated!"
+L["Error_version_pricing"] = "SGT Pricing version is below the required version, please update SGT pricing.\nSGT CraftCost will not load until you have updated!"

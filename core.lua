@@ -2,7 +2,9 @@ SGTCraftCost = LibStub("AceAddon-3.0"):NewAddon("SGTCraftCost", "AceConsole-3.0"
 SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 
 --Variables start
-local SGTCraftCostVersion = "v1.0.2";
+SGTCraftCost.majorVersion = 1;
+SGTCraftCost.subVersion = 0;
+SGTCraftCost.minorVersion = 3;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -10,11 +12,19 @@ local orderSchematic = ProfessionsFrame.OrdersPage.OrderView.OrderDetails.Schema
 --Variables end
 
 function SGTCraftCost:OnInitialize()
+    if(SGTCore.DoVersionCheck == nil or SGTCore:DoVersionCheck(1,0,2, SGTPricing) == false) then
+        message(SGTCraftCost.L["Error_version_pricing"]);
+        return;
+    end
 	SGTCraftCost:RegisterEvent("TRADE_SKILL_SHOW", "OnProfessionOpened");
 	SGTCraftCost:RegisterChatCommand("tstcc", "tst");
     professionsSchematic.QualityDialog:RegisterCallback("Accepted", SGTCraftCost.OnReagentsModified);
-    SGTCore:AddTabWithFrame("SGTCraftCost", SGTCraftCost.L["Craft Cost"], SGTCraftCost.L["Craft Cost"], SGTCraftCostVersion, SGTCraftCost.OnCraftCostFrameCreated);
+    SGTCore:AddTabWithFrame("SGTCraftCost", SGTCraftCost.L["Craft Cost"], SGTCraftCost.L["Craft Cost"], SGTCraftCost:GetVersionString(), SGTCraftCost.OnCraftCostFrameCreated);
     EventRegistry:RegisterCallback("ProfessionsRecipeListMixin.Event.OnRecipeSelected", SGTCraftCost.UpdateCurrentReagentSelectionPrice);
+end
+
+function SGTCraftCost:GetVersionString()
+    return tostring(SGTCraftCost.majorVersion) .. "." .. tostring(SGTCraftCost.subVersion) .. "." .. tostring(SGTCraftCost.minorVersion);
 end
 
 function SGTCraftCost:OnCraftCostFrameCreated()
@@ -47,14 +57,14 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
         local price, minPrice = SGTCraftCost:GetCurrentPriceInSchematic(professionsSchematic);
         if(price == nil) then 
             professionPriceFrame.Text:SetText("");
-            return;
+        else
+            SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. GetCoinTextureString(price));
         end
         if(minPrice == nil) then 
             professionPriceFrame.Text2:SetText("");
-            return;
+        else
+            SGTCraftCost:UpdatePrice(professionPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. GetCoinTextureString(minPrice));
         end
-        SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. GetCoinTextureString(price));
-        SGTCraftCost:UpdatePrice(professionPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. GetCoinTextureString(minPrice));
     end
 
     if(ProfessionsFrame.OrdersPage:IsVisible()) then
@@ -77,7 +87,7 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
     local allocatedPrice = 0;
     local minPrice = 0;
     if(slots == nil) then
-        return nil;
+        return nil, nil;
     end;
     for slotIndex, slot in pairs(slots) do
         local schematic = slot:GetReagentSlotSchematic();
@@ -123,7 +133,7 @@ function SGTCraftCost:UpdatePrice(text, priceText)
 end
 
 function SGTCraftCost:GetReagentPrice(itemID)
-    local price = SGTPricing:GetCurrentAuctionPrice(itemID);
+    local price = SGTPricing:GetShortMarketPrice(itemID);
     if(price == nil) then
         return 0;
     end
