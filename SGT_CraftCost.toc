@@ -2,7 +2,7 @@
 ## Title: SGT Crafting Cost
 ## Notes: Shows the craft cost of a recipe using the currently selected materials.
 ## Author: Stroeckx
-## Version: v1.0.4
+## Version: v1.0.5
 ## Dependencies: SGT_Core, SGT_Pricing
 ## OptionalDeps: Ace3
 ## X-Embeds: Ace3

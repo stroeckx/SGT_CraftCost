@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 4;
+SGTCraftCost.minorVersion = 5;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -41,8 +41,10 @@ function SGTCraftCost:UseBestQualityModified()
     SGTCraftCost:UpdateCurrentReagentSelectionPrice();
 end
 
-function SGTCraftCost:OnRecipeSelected()
-    SGTCraftCost:UpdateCurrentReagentSelectionPrice();
+function SGTCraftCost:OnRecipeSelected(recipeInfo)
+    C_Timer.After(0, function()
+        SGTCraftCost:UpdateCurrentReagentSelectionPrice();
+    end)
 end
 
 function SGTCraftCost:tst()
@@ -78,6 +80,30 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
         else
             SGTCraftCost:UpdatePrice(professionPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. GetCoinTextureString(minPrice));
         end
+
+        local resultPriceMin, resultPriceMax  = SGTCraftCost:GetResultValue();
+        if(resultPriceMin == nil or resultPriceMin == 0 or minPrice == nil) then 
+            professionPriceFrame.Text3:SetText("");
+        else
+            local minProfit = resultPriceMin - minPrice;
+            local prefix = SGTCraftCost.L["ProfitPriceText"];
+            local absMinProfit = math.abs(minProfit);
+            if minProfit < 0 then 
+                prefix = prefix .. " -";
+            end
+
+            if resultPriceMax == nil or resultPriceMax == resultPriceMin then 
+                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. GetCoinTextureString(absMinProfit));
+            else
+                local maxProfit = resultPriceMax - minPrice;
+                local absMaxProfit = math.abs(maxProfit);
+                local midfix = "";
+                if maxProfit < 0 then 
+                    midfix = "-";
+                end
+                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. GetCoinTextureString(absMinProfit) .. " < " .. midfix .. GetCoinTextureString(absMaxProfit));
+            end
+        end
     end
 
     if(ProfessionsFrame.OrdersPage:IsVisible()) then
@@ -96,7 +122,7 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
 end
 
 function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
-    local slots = ProfessionsFrame.CraftingPage.SchematicForm:GetSlotsByReagentType(Enum.CraftingReagentType.Basic);
+    local slots = professionsSchematic:GetSlotsByReagentType(Enum.CraftingReagentType.Basic);
     local allocatedPrice = 0;
     local minPrice = 0;
     if(slots == nil) then
@@ -122,6 +148,17 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
     return allocatedPrice, minPrice;
 end
 
+function SGTCraftCost:GetResultValue()
+    local recipeInfo = professionsSchematic:GetRecipeInfo();
+    local reagents = professionsSchematic.transaction:CreateCraftingReagentInfoTbl();
+    local recipeID = recipeInfo.recipeID;
+    local outputItemInfo = C_TradeSkillUI.GetRecipeOutputItemData(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID());
+    local outputPrice = SGTCraftCost:GetOutputPrice(outputItemInfo.itemID);
+    local recipeSchematic = professionsSchematic.transaction:GetRecipeSchematic();
+	local quantityMin, quantityMax = recipeSchematic.quantityMin, recipeSchematic.quantityMax;
+    return outputPrice * quantityMin, outputPrice * quantityMax;
+end
+
 function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     local priceFrame = CreateFrame("Frame", "SGTCraftCostFrame", schematic);
     priceFrame:SetPoint("TOPLEFT", schematic.Reagents, "BOTTOMLEFT",0,0);
@@ -135,6 +172,10 @@ function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     text2:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, 0);
     priceFrame.Text2 = text2;
     
+    local text3 = priceFrame:CreateFontString("SGTCraftCostText3","ARTWORK", "GameFontHighlight");
+    text3:SetPoint("TOPLEFT", text2, "BOTTOMLEFT", 0, 0);
+    priceFrame.Text3 = text3;
+
     return priceFrame;
 end
 
@@ -146,6 +187,14 @@ end
 
 function SGTCraftCost:GetReagentPrice(itemID)
     local price = SGTPricing:GetShortMarketPrice(itemID);
+    if(price == nil) then
+        return 0;
+    end
+    return price;
+end
+
+function SGTCraftCost:GetOutputPrice(itemID)
+    local price = SGTPricing:GetCurrentAuctionPrice(itemID);
     if(price == nil) then
         return 0;
     end
