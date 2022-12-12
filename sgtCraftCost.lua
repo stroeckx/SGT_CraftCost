@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 6;
+SGTCraftCost.minorVersion = 7;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -12,10 +12,30 @@ local orderSchematic = ProfessionsFrame.OrdersPage.OrderView.OrderDetails.Schema
 --Variables end
 
 function SGTCraftCost:OnInitialize()
-    if(SGTCore.DoVersionCheck == nil or SGTCore:DoVersionCheck(1,0,2, SGTPricing) == false) then
+    if(SGTCore.DoVersionCheck == nil or SGTCore:DoVersionCheck(1,0,4, SGTCore) == false) then
+        message(SGTCraftCost.L["Error_version_core"]);
+        return;
+    end
+    if(SGTCore.DoVersionCheck == nil or SGTCore:DoVersionCheck(1,1,0, SGTPricing) == false) then
         message(SGTCraftCost.L["Error_version_pricing"]);
         return;
     end
+
+    SGTCraftCost.db = LibStub("AceDB-3.0"):New("SGTCraftCostDB", {
+        profile = 
+        {
+            settings = 
+            {
+                enabled = true,
+                hideAuctionatorPrices = true;
+                hideAuctionatorSearchButton = true;
+                showAllocatedCost = true;
+                showMinCost= true;
+                showProfit = true;
+            },
+        },
+    });
+    
 	SGTCraftCost:RegisterEvent("TRADE_SKILL_SHOW", "OnProfessionOpened");
 	SGTCraftCost:RegisterChatCommand("tstcc", "tst");
     SGTCore:AddTabWithFrame("SGTCraftCost", SGTCraftCost.L["Craft Cost"], SGTCraftCost.L["Craft Cost"], SGTCraftCost:GetVersionString(), SGTCraftCost.OnCraftCostFrameCreated);
@@ -23,10 +43,14 @@ function SGTCraftCost:OnInitialize()
 	professionsSchematic:RegisterCallback(ProfessionsRecipeSchematicFormMixin.Event.AllocationsModified, SGTCraftCost.OnAllocationsModified);
     professionsSchematic:RegisterCallback(ProfessionsRecipeSchematicFormMixin.Event.UseBestQualityModified, SGTCraftCost.UseBestQualityModified);
     C_Timer.After(0, function()
-        if(SGTPricing.IsAuctionatorLoaded == true) then 
-            Auctionator.Config.Options.CRAFTING_INFO_SHOW = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
-            Auctionator.Config.Options.CRAFTING_INFO_SHOW_PROFIT = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
-            Auctionator.Config.Options.CRAFTING_INFO_SHOW_COST = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
+        if(SGTPricing.IsAuctionatorLoaded == true) then
+            if(SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton) then 
+                Auctionator.Config.Options.CRAFTING_INFO_SHOW = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
+            end
+            if(SGTCraftCost.db.profile.settings.hideAuctionatorPrices) then
+                Auctionator.Config.Options.CRAFTING_INFO_SHOW_PROFIT = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
+                Auctionator.Config.Options.CRAFTING_INFO_SHOW_COST = false; --pretty ugly but currently SGT craftcost does nothing else as providing pricing, so presumably if people install this addon they want this pricing.
+            end
         end
     end)
 end
@@ -37,7 +61,40 @@ end
 
 function SGTCraftCost:OnCraftCostFrameCreated()
     local craftCostFrame = SGTCore:GetTabFrame("SGTCraftCost");
-    local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCoreDescriptionsText", craftCostFrame.scrollframe.scrollchild, craftCostFrame, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"], craftCostFrame);
+    local scrollframe = craftCostFrame.scrollframe.scrollchild;
+    local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCraftCostDescriptionText", craftCostFrame.scrollframe.scrollchild, craftCostFrame, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"], craftCostFrame);
+    local showAllocCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowAllocatedCheckbox", scrollframe, craftCostDescription, SGTCraftCost.db.profile.settings.showAllocatedCost, SGTCraftCost.L["showAllocated"], function(x, checked) 
+        SGTCraftCost.db.profile.settings.showAllocatedCost = checked; 
+        if(checked) then
+            professionPriceFrame.Text:Show();
+            ordersPriceFrame.Text:Show();
+        else
+            professionPriceFrame.Text:Hide();
+            ordersPriceFrame.Text:Hide();
+        end
+    end)
+    local showMinCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowMinatedCheckbox", scrollframe, showAllocCheckbox, SGTCraftCost.db.profile.settings.showMinCost, SGTCraftCost.L["showMin"], function(x, checked) 
+        SGTCraftCost.db.profile.settings.showMinCost = checked; 
+        if(checked) then
+            professionPriceFrame.Text2:Show();
+            ordersPriceFrame.Text2:Show();
+        else
+            professionPriceFrame.Text2:Hide();
+            ordersPriceFrame.Text2:Hide();
+        end
+    end)
+    local showProfitCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowProfitCheckbox", scrollframe, showMinCheckbox, SGTCraftCost.db.profile.settings.showProfit, SGTCraftCost.L["showProfit"], function(x, checked) 
+        SGTCraftCost.db.profile.settings.showProfit = checked; 
+        if(checked) then
+            professionPriceFrame.Text3:Show();
+            ordersPriceFrame.Text3:Show();
+        else
+            professionPriceFrame.Text3:Hide();
+            ordersPriceFrame.Text3:Hide();
+        end
+    end)
+    local hideAuctionatorPricesCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorPricesCheckbox", scrollframe, showProfitCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorPrices, SGTCraftCost.L["hideAuctionatorPrices"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorPrices = checked; end)
+    local hideAuctionatorSearchCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorSearchCheckbox", scrollframe, hideAuctionatorPricesCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton, SGTCraftCost.L["hideAuctionatorPrices"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton = checked; end)
 end
 
 function SGTCraftCost:OnAllocationsModified()
@@ -55,9 +112,45 @@ function SGTCraftCost:OnRecipeSelected(recipeInfo)
 end
 
 function SGTCraftCost:tst(item)
-    print(string.sub(tostring(item), 2, -7))
-    local test, t2 = GetItemInfo(item);
-    print(t2);
+    --local x1 = string.gsub(item,"|","\\124");
+    --print(x1);
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416::::Player-3391-09B7156D:|h[Crimson Combatant's Wildercloth Cloak |A:Professions-ChatIcon-Quality-Tier5:17:17::1|a]|h|r 7")
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak |A:Professions-ChatIcon-Quality-Tier5:17:17::1|a]|h|r 7")
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak |A::17:17::1|a]|h|r 7")
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
+    --print("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r")
+    --print("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|r")
+    --
+    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r"))
+    --print("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
+    --print(TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r"))
+    --print(TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:1:11:111:11:1:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r"))
+    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:1:11:111:11:1:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")))
+    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r")))
+    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r"))
+    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r"))
+    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:8851:2:40:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r"))
+    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:3:8851:8852:8802:5:28:2164:29:32:30:49:38:8:40:847:::::|h[Pioneer's Practiced Gloves]|h|r"))
+    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:8851:8852:8802:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r")))
+    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:3:8851:8852:8802:5:28:2164:29:32:30:49:38:8:40:847:::::|h[Pioneer's Practiced Gloves]|h|r")))
+
+
+    
+    
+    --print(tostring(item))
+    --local x1 = string.gsub(item,"|","\\124");
+    --print(x1);
+    --local x2 = string.gsub(x1,"\\124","|");
+    --print(x2);
+    --print(string.gsub(item,"|","\\124"));
+
+
+
+
+    --print(string.sub(tostring(item), 2, -7))
+    --local test, t2 = GetItemInfo(item);
+    --print(t2);
     --print(tostring(item))
     --print(TSM_API.ToItemString(tostring(item)))
 end
@@ -186,14 +279,23 @@ function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     local text = priceFrame:CreateFontString("SGTCraftCostText","ARTWORK", "GameFontHighlight");
     text:SetPoint("TOPLEFT", priceFrame, "TOPLEFT", 0, 0);
     priceFrame.Text = text;
+    if(SGTCraftCost.db.profile.settings.showAllocatedCost == false) then
+        text:Hide();
+    end
 
     local text2 = priceFrame:CreateFontString("SGTCraftCostText2","ARTWORK", "GameFontHighlight");
     text2:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, 0);
     priceFrame.Text2 = text2;
+    if(SGTCraftCost.db.profile.settings.showMinCost == false) then
+        text2:Hide();
+    end
     
     local text3 = priceFrame:CreateFontString("SGTCraftCostText3","ARTWORK", "GameFontHighlight");
     text3:SetPoint("TOPLEFT", text2, "BOTTOMLEFT", 0, 0);
     priceFrame.Text3 = text3;
+    if(SGTCraftCost.db.profile.settings.showProfit == false) then
+        text3:Hide();
+    end
 
     return priceFrame;
 end
