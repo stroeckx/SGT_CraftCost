@@ -1,10 +1,10 @@
-SGTCraftCost = LibStub("AceAddon-3.0"):NewAddon("SGTCraftCost", "AceConsole-3.0", "AceEvent-3.0");
+local addonName, globalTable = ...
 SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 7;
+SGTCraftCost.minorVersion = 8;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -112,47 +112,6 @@ function SGTCraftCost:OnRecipeSelected(recipeInfo)
 end
 
 function SGTCraftCost:tst(item)
-    --local x1 = string.gsub(item,"|","\\124");
-    --print(x1);
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416::::Player-3391-09B7156D:|h[Crimson Combatant's Wildercloth Cloak |A:Professions-ChatIcon-Quality-Tier5:17:17::1|a]|h|r 7")
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak |A:Professions-ChatIcon-Quality-Tier5:17:17::1|a]|h|r 7")
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak |A::17:17::1|a]|h|r 7")
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:8840:5247:8983:8802:5:28:2164:29:40:30:36:38:8:40:416:::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
-    --print("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r")
-    --print("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|r")
-    --
-    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r"))
-    --print("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")
-    --print(TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:1:3524:2:40:416:38:8:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r"))
-    --print(TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:1:11:111:11:1:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r"))
-    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff1eff00|Hitem:193522::::::::70:577::13:5:8839:1:11:111:11:1:::::::::::::::|h[Crimson Combatant's Wildercloth Cloak]|h|r")))
-    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r")))
-    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::|h[Pioneer's Practiced Gloves]|h|r"))
-    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:3524:2:40:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r"))
-    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:8851:2:40:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r"))
-    --print(TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:3:8851:8852:8802:5:28:2164:29:32:30:49:38:8:40:847:::::|h[Pioneer's Practiced Gloves]|h|r"))
-    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:1:8851:8852:8802:847:38:8:::::::::::::::|h[Pioneer's Practiced Gloves]|h|r")))
-    --print(TSM_API.GetCustomPriceValue("DBRecent", TSM_API.ToItemString("|cff0070dd|Hitem:201943::::::::70:577::13:3:8851:8852:8802:5:28:2164:29:32:30:49:38:8:40:847:::::|h[Pioneer's Practiced Gloves]|h|r")))
-
-
-    
-    
-    --print(tostring(item))
-    --local x1 = string.gsub(item,"|","\\124");
-    --print(x1);
-    --local x2 = string.gsub(x1,"\\124","|");
-    --print(x2);
-    --print(string.gsub(item,"|","\\124"));
-
-
-
-
-    --print(string.sub(tostring(item), 2, -7))
-    --local test, t2 = GetItemInfo(item);
-    --print(t2);
-    --print(tostring(item))
-    --print(TSM_API.ToItemString(tostring(item)))
 end
 
 function SGTCraftCost:OnProfessionOpened()
@@ -261,11 +220,23 @@ function SGTCraftCost:GetResultValue()
     local reagents = professionsSchematic.transaction:CreateCraftingReagentInfoTbl();
     local recipeID = recipeInfo.recipeID;
     local outputItemInfo = C_TradeSkillUI.GetRecipeOutputItemData(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID());
+    local schematicInfo = C_TradeSkillUI.GetRecipeSchematic(recipeID, false);
+    if(schematicInfo.recipeType == 3) then
+        local operationInfo = C_TradeSkillUI.GetCraftingOperationInfo(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID());
+        if(SGTCraftCost.recipeData.Enchants ~= nil and SGTCraftCost.recipeData.Enchants[recipeID] ~= nil and SGTCraftCost.recipeData.Enchants[recipeID]["q" .. operationInfo.guaranteedCraftingQualityID]) then
+            local enchantScroll = SGTCraftCost.recipeData.Enchants[recipeID]["q" .. operationInfo.guaranteedCraftingQualityID];
+            local price = SGTCraftCost:GetOutputPriceByItemID(enchantScroll);
+            return price;
+        else
+            return nil;
+        end 
+    end
     if(outputItemInfo.hyperlink == nil) then
         return;
     end
     local _, itemLink = GetItemInfo(outputItemInfo.hyperlink);
-    local outputPrice = SGTCraftCost:GetOutputPrice(itemLink);
+    local outputPrice = 0;
+    outputPrice = SGTCraftCost:GetOutputPrice(itemLink);
     local recipeSchematic = professionsSchematic.transaction:GetRecipeSchematic();
 	local quantityMin, quantityMax = recipeSchematic.quantityMin, recipeSchematic.quantityMax;
     return outputPrice * quantityMin, outputPrice * quantityMax;
@@ -316,6 +287,14 @@ end
 
 function SGTCraftCost:GetOutputPrice(itemLink)
     local price = SGTPricing:GetCurrentAuctionPriceByItemLink(itemLink);
+    if(price == nil) then
+        return 0;
+    end
+    return price;
+end
+
+function SGTCraftCost:GetOutputPriceByItemID(itemID)
+    local price = SGTPricing:GetCurrentAuctionPriceByItemID(itemID);
     if(price == nil) then
         return 0;
     end
