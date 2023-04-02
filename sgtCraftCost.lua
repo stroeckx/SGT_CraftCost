@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 8;
+SGTCraftCost.minorVersion = 9;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -120,6 +120,7 @@ function SGTCraftCost:OnProfessionOpened()
     end
     if(ordersPriceFrame == nil) then
         ordersPriceFrame = SGTCraftCost:CreateprofessionPriceFrame(orderSchematic);
+        ordersPriceFrame:Hide();
     end
 end
 
@@ -244,7 +245,7 @@ end
 
 function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     local priceFrame = CreateFrame("Frame", "SGTCraftCostFrame", schematic);
-    priceFrame:SetPoint("TOPLEFT", schematic.Reagents, "BOTTOMLEFT",0,0);
+    SGTCraftCost:UpdatePriceFrameAnchor(priceFrame)
     priceFrame:SetSize(200,32);
     
     local text = priceFrame:CreateFontString("SGTCraftCostText","ARTWORK", "GameFontHighlight");
@@ -271,8 +272,18 @@ function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     return priceFrame;
 end
 
+function SGTCraftCost:UpdatePriceFrameAnchor(priceFrame)
+    local schematic = priceFrame:GetParent();
+    local anchorParent = schematic.Reagents;
+    if(schematic.OptionalReagents ~= nil and schematic.OptionalReagents:IsShown() == true) then
+        anchorParent = schematic.OptionalReagents;
+    end
+    priceFrame:SetPoint("TOPLEFT", anchorParent, "BOTTOMLEFT", 0, 0);
+end
+
 function SGTCraftCost:UpdatePrice(text, priceText)
     if(text ~= nil) then 
+        SGTCraftCost:UpdatePriceFrameAnchor(text:GetParent());
         text:SetText(priceText);
     end
 end
