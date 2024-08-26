@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 13;
+SGTCraftCost.minorVersion = 14;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -200,20 +200,22 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
         local schematic = slot:GetReagentSlotSchematic();
         local transaction = slot:GetTransaction();
         local quantities = Professions.GetQuantitiesAllocated(transaction, slot:GetReagentSlotSchematic());
-        if(#schematic.reagents == #quantities) then --quantities are hardcoded for materials, but some items (sparks) use this interface while they are not really materials. For now assume that if this number doesn't match, it's not a material relevant for pricing so skip this.
-            local quantityRequired = schematic.quantityRequired;
-            local cheapestMatPrice = -1;
-            for tier, data in pairs(schematic.reagents) do
-                for _, reagentID in pairs(data) do
-                    local matPrice = SGTCraftCost:GetReagentPrice(reagentID);
-                    if(cheapestMatPrice < 0 or matPrice < cheapestMatPrice and matPrice > 0) then
-                        cheapestMatPrice = matPrice;
-                    end
-                    allocatedPrice = allocatedPrice + (quantities[tier] * matPrice);
+        local quantityRequired = schematic.quantityRequired;
+        local cheapestMatPrice = -1;
+        for tier, data in pairs(schematic.reagents) do
+            for _, reagentID in pairs(data) do
+                local matPrice = SGTCraftCost:GetReagentPrice(reagentID);
+                if(cheapestMatPrice < 0 or matPrice < cheapestMatPrice and matPrice > 0) then
+                    cheapestMatPrice = matPrice;
                 end
+                quantityForTier = 0;
+                if(tier > #quantities) then
+                    quantityForTier = quantities[tier];
+                end
+                allocatedPrice = allocatedPrice + (quantityForTier * matPrice);
             end
-            minPrice = minPrice + (quantityRequired * cheapestMatPrice);
         end
+        minPrice = minPrice + (quantityRequired * cheapestMatPrice);
     end
     return allocatedPrice, minPrice;
 end
@@ -225,7 +227,7 @@ function SGTCraftCost:GetResultValue()
     local outputItemInfo = C_TradeSkillUI.GetRecipeOutputItemData(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID());
     local schematicInfo = C_TradeSkillUI.GetRecipeSchematic(recipeID, false);
     if(schematicInfo.recipeType == 3) then
-        local operationInfo = C_TradeSkillUI.GetCraftingOperationInfo(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID());
+        local operationInfo = C_TradeSkillUI.GetCraftingOperationInfo(recipeID, reagents, professionsSchematic.transaction:GetAllocationItemGUID(), professionsSchematic.transaction:IsApplyingConcentration());
         if(SGTCraftCost.recipeData.Enchants ~= nil and SGTCraftCost.recipeData.Enchants[recipeID] ~= nil and SGTCraftCost.recipeData.Enchants[recipeID]["q" .. operationInfo.guaranteedCraftingQualityID]) then
             local enchantScroll = SGTCraftCost.recipeData.Enchants[recipeID]["q" .. operationInfo.guaranteedCraftingQualityID];
             local price = SGTCraftCost:GetOutputPriceByItemID(enchantScroll);
