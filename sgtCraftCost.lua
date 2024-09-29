@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 14;
+SGTCraftCost.minorVersion = 15;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -61,9 +61,10 @@ end
 
 function SGTCraftCost:OnCraftCostFrameCreated()
     local craftCostFrame = SGTCore:GetTabFrame("SGTCraftCost");
-    local scrollframe = craftCostFrame.scrollframe.scrollchild;
-    local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCraftCostDescriptionText", craftCostFrame.scrollframe.scrollchild, craftCostFrame, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"], craftCostFrame);
-    local showAllocCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowAllocatedCheckbox", scrollframe, craftCostDescription, SGTCraftCost.db.profile.settings.showAllocatedCost, SGTCraftCost.L["showAllocated"], function(x, checked) 
+    local scrollchild = craftCostFrame.scrollframe.scrollchild;
+	local anchor = SGTCore:AddInitialAnchor("Anchor", scrollchild, craftCostFrame);
+    local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCraftCostDescriptionText", scrollchild, anchor, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"]);
+    local showAllocCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowAllocatedCheckbox", scrollchild, craftCostDescription, SGTCraftCost.db.profile.settings.showAllocatedCost, SGTCraftCost.L["showAllocated"], function(x, checked) 
         SGTCraftCost.db.profile.settings.showAllocatedCost = checked; 
         if(checked) then
             professionPriceFrame.Text:Show();
@@ -73,7 +74,7 @@ function SGTCraftCost:OnCraftCostFrameCreated()
             ordersPriceFrame.Text:Hide();
         end
     end)
-    local showMinCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowMinatedCheckbox", scrollframe, showAllocCheckbox, SGTCraftCost.db.profile.settings.showMinCost, SGTCraftCost.L["showMin"], function(x, checked) 
+    local showMinCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowMinatedCheckbox", scrollchild, showAllocCheckbox, SGTCraftCost.db.profile.settings.showMinCost, SGTCraftCost.L["showMin"], function(x, checked) 
         SGTCraftCost.db.profile.settings.showMinCost = checked; 
         if(checked) then
             professionPriceFrame.Text2:Show();
@@ -83,7 +84,7 @@ function SGTCraftCost:OnCraftCostFrameCreated()
             ordersPriceFrame.Text2:Hide();
         end
     end)
-    local showProfitCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowProfitCheckbox", scrollframe, showMinCheckbox, SGTCraftCost.db.profile.settings.showProfit, SGTCraftCost.L["showProfit"], function(x, checked) 
+    local showProfitCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowProfitCheckbox", scrollchild, showMinCheckbox, SGTCraftCost.db.profile.settings.showProfit, SGTCraftCost.L["showProfit"], function(x, checked) 
         SGTCraftCost.db.profile.settings.showProfit = checked; 
         if(checked) then
             professionPriceFrame.Text3:Show();
@@ -93,8 +94,8 @@ function SGTCraftCost:OnCraftCostFrameCreated()
             ordersPriceFrame.Text3:Hide();
         end
     end)
-    local hideAuctionatorPricesCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorPricesCheckbox", scrollframe, showProfitCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorPrices, SGTCraftCost.L["hideAuctionatorPrices"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorPrices = checked; end)
-    local hideAuctionatorSearchCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorSearchCheckbox", scrollframe, hideAuctionatorPricesCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton, SGTCraftCost.L["hideAuctionatorPrices"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton = checked; end)
+    local hideAuctionatorPricesCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorPricesCheckbox", scrollchild, showProfitCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorPrices, SGTCraftCost.L["hideAuctionatorPrices"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorPrices = checked; end)
+    local hideAuctionatorSearchCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostHideAuctionatorSearchCheckbox", scrollchild, hideAuctionatorPricesCheckbox, SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton, SGTCraftCost.L["hideAuctionatorSeach"], function(x, checked) SGTCraftCost.db.profile.settings.hideAuctionatorSearchButton = checked; end)
 end
 
 function SGTCraftCost:OnAllocationsModified()
