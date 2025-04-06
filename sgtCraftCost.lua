@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 17;
+SGTCraftCost.minorVersion = 18;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
