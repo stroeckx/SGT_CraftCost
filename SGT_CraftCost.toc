@@ -1,8 +1,8 @@
-## Interface: 110105
+## Interface: 110107
 ## Title: SGT Crafting Cost
 ## Notes: Shows the craft cost of a recipe using the currently selected materials.
 ## Author: Stroeckx
-## Version: v1.0.20
+## Version: v1.0.21
 ## Dependencies: SGT_Core, SGT_Pricing
 ## SavedVariables: SGTCraftCostDB
 ## OptionalDeps: Ace3
