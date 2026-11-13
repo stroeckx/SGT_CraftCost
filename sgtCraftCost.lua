@@ -4,7 +4,7 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 --Variables start
 SGTCraftCost.majorVersion = 1;
 SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 25;
+SGTCraftCost.minorVersion = 26;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
@@ -64,16 +64,17 @@ function SGTCraftCost:OnCraftCostFrameCreated()
     local scrollchild = craftCostFrame.scrollframe.scrollchild;
 	local anchor = SGTCore:AddInitialAnchor("Anchor", scrollchild, craftCostFrame);
     local craftCostDescription = SGTCore:AddAnchoredFontString("SGTCraftCostDescriptionText", scrollchild, anchor, 5, -5, SGTCraftCost.L["SGTCraftCostDescription"]);
-    local showAllocCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowAllocatedCheckbox", scrollchild, craftCostDescription, SGTCraftCost.db.profile.settings.showAllocatedCost, SGTCraftCost.L["showAllocated"], function(x, checked) 
-        SGTCraftCost.db.profile.settings.showAllocatedCost = checked; 
-        if(checked) then
-            professionPriceFrame.Text:Show();
-            ordersPriceFrame.Text:Show();
-        else
-            professionPriceFrame.Text:Hide();
-            ordersPriceFrame.Text:Hide();
-        end
-    end)
+    --allocated cost disabled as it does not work anymore
+    --local showAllocCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowAllocatedCheckbox", scrollchild, craftCostDescription, SGTCraftCost.db.profile.settings.showAllocatedCost, SGTCraftCost.L["showAllocated"], function(x, checked) 
+    --    SGTCraftCost.db.profile.settings.showAllocatedCost = checked; 
+    --    if(checked) then
+    --        professionPriceFrame.Text:Show();
+    --        ordersPriceFrame.Text:Show();
+    --    else
+    --        professionPriceFrame.Text:Hide();
+    --        ordersPriceFrame.Text:Hide();
+    --    end
+    --end)
     local showMinCheckbox = SGTCore:AddOptionCheckbox("SGTCraftCostShowMinatedCheckbox", scrollchild, showAllocCheckbox, SGTCraftCost.db.profile.settings.showMinCost, SGTCraftCost.L["showMin"], function(x, checked) 
         SGTCraftCost.db.profile.settings.showMinCost = checked; 
         if(checked) then
@@ -138,12 +139,12 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
         if(price == nil) then 
             professionPriceFrame.Text:SetText("");
         else
-            SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. GetCoinTextureString(price));
+            SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
         end
         if(minPrice == nil) then 
             professionPriceFrame.Text2:SetText("");
         else
-            SGTCraftCost:UpdatePrice(professionPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. GetCoinTextureString(minPrice));
+            SGTCraftCost:UpdatePrice(professionPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. C_CurrencyInfo.GetCoinTextureString(minPrice));
         end
         if(minPrice == nil) then
             professionPriceFrame.Text3:SetText("");
@@ -162,7 +163,7 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
             end
 
             if resultPriceMax == nil or resultPriceMax == resultPriceMin then 
-                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. GetCoinTextureString(absMinProfit));
+                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. C_CurrencyInfo.GetCoinTextureString(absMinProfit));
             else
                 local maxProfit = resultPriceMax - minPrice;
                 local absMaxProfit = math.abs(maxProfit);
@@ -170,7 +171,7 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
                 if maxProfit < 0 then 
                     midfix = "-";
                 end
-                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. GetCoinTextureString(absMinProfit) .. " < " .. midfix .. GetCoinTextureString(absMaxProfit));
+                SGTCraftCost:UpdatePrice(professionPriceFrame.Text3, prefix .. C_CurrencyInfo.GetCoinTextureString(absMinProfit) .. " < " .. midfix .. C_CurrencyInfo.GetCoinTextureString(absMaxProfit));
             end
         end
     end
@@ -185,8 +186,8 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
             ordersPriceFrame.Text2:SetText("");
             return;
         end
-        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. GetCoinTextureString(price));
-        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. GetCoinTextureString(minPrice));
+        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
+        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. C_CurrencyInfo.GetCoinTextureString(minPrice));
     end
 end
 
@@ -240,7 +241,7 @@ function SGTCraftCost:GetResultValue()
     if(outputItemInfo.hyperlink == nil) then
         return;
     end
-    local _, itemLink = GetItemInfo(outputItemInfo.hyperlink);
+    local _, itemLink = C_Item.GetItemInfo(outputItemInfo.hyperlink);
     local outputPrice = 0;
     outputPrice = SGTCraftCost:GetOutputPrice(itemLink);
     local recipeSchematic = professionsSchematic.transaction:GetRecipeSchematic();
@@ -253,15 +254,16 @@ function SGTCraftCost:CreateprofessionPriceFrame(schematic)
     SGTCraftCost:UpdatePriceFrameAnchor(priceFrame)
     priceFrame:SetSize(200,32);
     
-    local text = priceFrame:CreateFontString("SGTCraftCostText","ARTWORK", "GameFontHighlight");
-    text:SetPoint("TOPLEFT", priceFrame, "TOPLEFT", 0, 0);
-    priceFrame.Text = text;
-    if(SGTCraftCost.db.profile.settings.showAllocatedCost == false) then
-        text:Hide();
-    end
+    --allocated cost hidden for now as it is not working anymore.
+    --local text = priceFrame:CreateFontString("SGTCraftCostText","ARTWORK", "GameFontHighlight");
+    --text:SetPoint("TOPLEFT", priceFrame, "TOPLEFT", 0, 0);
+    --priceFrame.Text = text;
+    --if(SGTCraftCost.db.profile.settings.showAllocatedCost == false) then
+    --    text:Hide();
+    --end
 
     local text2 = priceFrame:CreateFontString("SGTCraftCostText2","ARTWORK", "GameFontHighlight");
-    text2:SetPoint("TOPLEFT", text, "BOTTOMLEFT", 0, 0);
+    text2:SetPoint("TOPLEFT", priceFrame, "TOPLEFT", 0, 0);
     priceFrame.Text2 = text2;
     if(SGTCraftCost.db.profile.settings.showMinCost == false) then
         text2:Hide();
