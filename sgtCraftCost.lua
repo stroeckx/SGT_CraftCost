@@ -3,12 +3,14 @@ SGTCraftCost.L = LibStub("AceLocale-3.0"):GetLocale("SGTCraftCost");
 
 --Variables start
 SGTCraftCost.majorVersion = 1;
-SGTCraftCost.subVersion = 0;
-SGTCraftCost.minorVersion = 26;
+SGTCraftCost.subVersion = 1;
+SGTCraftCost.minorVersion = 0;
 local professionPriceFrame = nil;
 local ordersPriceFrame = nil;
 local professionsSchematic = ProfessionsFrame.CraftingPage.SchematicForm;
-local orderSchematic = ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm;
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+    local orderSchematic = ProfessionsFrame.OrdersPage.OrderView.OrderDetails.SchematicForm;
+end
 --Variables end
 
 function SGTCraftCost:OnInitialize()
@@ -121,8 +123,10 @@ function SGTCraftCost:OnProfessionOpened()
         professionPriceFrame = SGTCraftCost:CreateprofessionPriceFrame(professionsSchematic)
     end
     if(ordersPriceFrame == nil) then
-        ordersPriceFrame = SGTCraftCost:CreateprofessionPriceFrame(orderSchematic);
-        ordersPriceFrame:Hide();
+        if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+            ordersPriceFrame = SGTCraftCost:CreateprofessionPriceFrame(orderSchematic);
+            ordersPriceFrame:Hide();
+        end
     end
 end
 
@@ -136,11 +140,12 @@ end
 function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
     if(ProfessionsFrame.CraftingPage:IsVisible()) then
         local price, minPrice = SGTCraftCost:GetCurrentPriceInSchematic(professionsSchematic);
-        if(price == nil) then 
-            professionPriceFrame.Text:SetText("");
-        else
-            SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
-        end
+        --allcoated cost disabled for now
+        --if(price == nil) then 
+        --    professionPriceFrame.Text:SetText("");
+        --else
+        --    SGTCraftCost:UpdatePrice(professionPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
+        --end
         if(minPrice == nil) then 
             professionPriceFrame.Text2:SetText("");
         else
@@ -176,18 +181,20 @@ function SGTCraftCost:UpdateCurrentReagentSelectionPrice()
         end
     end
 
-    if(ProfessionsFrame.OrdersPage:IsVisible()) then
-        local price, minPrice = SGTCraftCost:GetCurrentPriceInSchematic(orderSchematic);
-        if(price == nil) then 
-            ordersPriceFrame.Text:SetText("");
-            return;
+    if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+        if(ProfessionsFrame.OrdersPage:IsVisible()) then
+            local price, minPrice = SGTCraftCost:GetCurrentPriceInSchematic(orderSchematic);
+            if(price == nil) then 
+                ordersPriceFrame.Text:SetText("");
+                return;
+            end
+            if(minPrice == nil) then 
+                ordersPriceFrame.Text2:SetText("");
+                return;
+            end
+            SGTCraftCost:UpdatePrice(ordersPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
+            SGTCraftCost:UpdatePrice(ordersPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. C_CurrencyInfo.GetCoinTextureString(minPrice));
         end
-        if(minPrice == nil) then 
-            ordersPriceFrame.Text2:SetText("");
-            return;
-        end
-        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text, SGTCraftCost.L["AllocPriceText"] .. C_CurrencyInfo.GetCoinTextureString(price));
-        SGTCraftCost:UpdatePrice(ordersPriceFrame.Text2, SGTCraftCost.L["MinPriceText"] .. C_CurrencyInfo.GetCoinTextureString(minPrice));
     end
 end
 
@@ -210,7 +217,7 @@ function SGTCraftCost:GetCurrentPriceInSchematic(schematic)
                 if(cheapestMatPrice < 0 or matPrice < cheapestMatPrice and matPrice > 0) then
                     cheapestMatPrice = matPrice;
                 end
-                quantityForTier = 0;
+                local quantityForTier = 0;
                 if(tier > #quantities) then
                     quantityForTier = quantities[tier];
                 end
